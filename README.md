@@ -1,4 +1,4 @@
-# stibarc_app
+# stibarc_messenger_app
 The mobile app for STiBaRC Messenger
 
 [![Creative Commons License](https://i.creativecommons.org/l/by-nc-sa/4.0/88x31.png)](http://creativecommons.org/licenses/by-nc-sa/4.0/)  
