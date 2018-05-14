@@ -52,6 +52,8 @@ window.onload = function() {
 		checkSess();
 		getChats();
 		startNotifs();
+		cordova.plugins.backgroundMode.enable();
+		cordova.plugins.backgroundMode.overrideBackButton();
 	}
 	if (window.localStorage.getItem("username") == "" || window.localStorage.getItem("username") == undefined) {
 		if (sess != undefined && sess != null && sess != "") {
