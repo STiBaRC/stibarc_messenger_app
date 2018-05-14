@@ -46,6 +46,8 @@ var toBox = function(oof,i) {
 	document.getElementById("chatstuffs").innerHTML = document.getElementById("chatstuffs").innerHTML.concat("<br/>");
 }
 
+var first = true;
+
 var getchats = function(id, sess) {
 	var http = new XMLHttpRequest();
 	http.open("POST", "https://messenger.stibarc.gq/api/getuserchat.sjs", true);
@@ -59,10 +61,16 @@ var getchats = function(id, sess) {
 				toBox(tmp[i].replace(/<script/g, "&lt;script").replace(/<meta/g, "&lt;meta").replace(/<\/script/g, "&lt;/script"),i);
 			}
 		}
+		if (first) {
+			console.log("First");
+			window.scrollTo(0,document.body.scrollHeight);
+			first = false;
+		}
 	}
 }
 
 window.onload = function() {
+	first = true;
 	var id = getAllUrlParams().id;
 	var sess = window.localStorage.getItem("sess");
 	var chathttp = new XMLHttpRequest();
