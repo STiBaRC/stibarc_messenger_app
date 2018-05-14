@@ -62,7 +62,6 @@ var getchats = function(id, sess) {
 			}
 		}
 		if (first) {
-			console.log("First");
 			window.scrollTo(0,document.body.scrollHeight);
 			first = false;
 		}
@@ -89,6 +88,7 @@ window.onload = function() {
 			chathttp2.open("POST", "https://messenger.stibarc.gq/api/postchat.sjs", false);
 			chathttp2.send("sess="+sess+"&other="+username+"&id="+id+"&message="+encodeURIComponent(text.replace(/\n/g, "<br/>")));
 			getchats(id, sess);
+			window.scrollTo(0,document.body.scrollHeight);
 		}
 	}
 }
