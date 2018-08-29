@@ -22,20 +22,19 @@ var getChats = function() {
 	document.getElementById("mainblobshitwithlist").innerHTML = "<br/>";
 	var sess = window.localStorage.getItem("sess");
 	var xmlHttp = new XMLHttpRequest();
-	xmlHttp.open("POST", "https://messenger.stibarc.gq/api/getuserchats.sjs", false);
+	xmlHttp.open("POST", "https://messenger.stibarc.gq/api/v2/getuserchats.sjs", true);
 	xmlHttp.send("sess="+sess);
-	var tmp = JSON.parse(xmlHttp.responseText);
-	for (key in tmp) {
-		var div = document.createElement('div');
-		div.className = 'chatbox';
-		div.innerHTML = '<a href="chat.html?id='+key+'">'+tmp[key]['user']+"</a>:";
-		var tmp2 = new XMLHttpRequest();
-		tmp2.open("POST", "https://messenger.stibarc.gq/api/getuserchat.sjs", false);
-		tmp2.send("sess="+sess+"&id="+key);
-		var tmp3 = tmp2.responseText.split("\n");
-		div.innerHTML = div.innerHTML.concat("<br/><i>"+tmp3[tmp3.length-2]+"</i>");
-		document.getElementById("mainblobshitwithlist").appendChild(div);
-		document.getElementById("mainblobshitwithlist").innerHTML = document.getElementById("mainblobshitwithlist").innerHTML.concat("<br/>");
+	xmlHttp.onload = function(e) {
+		var tmp = JSON.parse(xmlHttp.responseText);
+		for (key in tmp) {
+			var div = document.createElement('div');
+			div.className = 'chatbox';
+			div.innerHTML = '<a href="chat.html?id='+key+'">'+tmp[key]['user']+"</a>:";
+			if (tmp[key]['lastmessage'] == undefined) {tmp[key]['lastmessage'] = {sender: tmp[key]['user'], message: "No messages sent yet"}}
+			div.innerHTML = div.innerHTML.concat("<br/><i>"+tmp[key]['lastmessage']['sender']+":"+tmp[key]['lastmessage']['message']+"</i>");
+			document.getElementById("mainblobshitwithlist").appendChild(div);
+			document.getElementById("mainblobshitwithlist").innerHTML = document.getElementById("mainblobshitwithlist").innerHTML.concat("<br/>");
+		}
 	}
 }
 
