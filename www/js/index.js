@@ -33,7 +33,7 @@ var getChats = function() {
 		tmp2.open("POST", "https://messenger.stibarc.gq/api/getuserchat.sjs", false);
 		tmp2.send("sess="+sess+"&id="+key);
 		var tmp3 = tmp2.responseText.split("\n");
-		div.innerHTML = div.innerHTML.concat("<br/><i>"+tmp3[tmp3.length-2].replace(/<script/g, "&lt;script").replace(/<meta/g, "&lt;meta")+"</i>");
+		div.innerHTML = div.innerHTML.concat("<br/><i>"+tmp3[tmp3.length-2]+"</i>");
 		document.getElementById("mainblobshitwithlist").appendChild(div);
 		document.getElementById("mainblobshitwithlist").innerHTML = document.getElementById("mainblobshitwithlist").innerHTML.concat("<br/>");
 	}
@@ -52,8 +52,6 @@ window.onload = function() {
 		checkSess();
 		getChats();
 		startNotifs();
-		cordova.plugins.backgroundMode.enable();
-		cordova.plugins.backgroundMode.overrideBackButton();
 	}
 	if (window.localStorage.getItem("username") == "" || window.localStorage.getItem("username") == undefined) {
 		if (sess != undefined && sess != null && sess != "") {
