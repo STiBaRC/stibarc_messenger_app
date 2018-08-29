@@ -24,11 +24,12 @@ body {
 }
 #input {
 	height: 100%;
-	width: 89%;
+	width: 90%;
 }
 #send {
 	height: 100%;
-	width: 9%;
+	width: 8%;
+	float: right;
 }
 #chatstuffs {
 	background-color: #FFFFFF;
