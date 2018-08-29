@@ -1,3 +1,5 @@
+var first = true;
+
 function getAllUrlParams(url) {
     var queryString = url ? url.split('?')[1] : window.location.search.slice(1);
     var obj = {};
@@ -34,37 +36,46 @@ function getAllUrlParams(url) {
 }
 
 var toBox = function(oof,i) {
-	var tmp = oof.split(":");
-	var username = tmp[0].replace(/<script/g, "&lt;script").replace(/<meta/g, "&lt;meta");
-	tmp.shift();
-	tmp = tmp.join(":");
 	var div = document.createElement('div');
 	div.className = 'chatbox'
 	div.setAttribute("name", i+1);
-	div.innerHTML = '<a href="https://stibarc.gq/user.html?id='+username+'">'+username+'</a><br/>'+tmp;
+	div.innerHTML = '<a href="https://stibarc.gq/user.html?id='+oof['sender']+'">'+oof['sender']+'</a><br/>'+oof['message'];
 	document.getElementById("chatstuffs").appendChild(div);
 	document.getElementById("chatstuffs").innerHTML = document.getElementById("chatstuffs").innerHTML.concat("<br/>");
 }
 
-var first = true;
+var oldresponse = "";
+var inloop = false;
+
+var getchatsloop = function(tmp, i) {
+	toBox(tmp[i],i);
+	window.scrollTo(0,document.body.scrollHeight);
+	if (tmp[i+1] != undefined) {
+		setTimeout(function() {getchatsloop(tmp, i+1)},1);
+	} else {
+		inloop = false;
+	}
+}
 
 var getchats = function(id, sess) {
 	var http = new XMLHttpRequest();
-	http.open("POST", "https://messenger.stibarc.gq/api/getuserchat.sjs", true);
+	http.open("POST", "https://messenger.stibarc.gq/api/v2/getuserchat.sjs", true);
 	http.send("id="+id+"&sess="+sess);
 	http.onload = function(e) {
-		var tmp = http.responseText.split("\n");
-		if (tmp[0] == "CHATHEAD") {
-			document.getElementById("chatstuffs").innerHTML = "<br/>";
-			tmp.shift();
-			for (var i = 0; i < tmp.length-1; i++) {
-				toBox(tmp[i],i);
-			}
+		if (http.responseText != oldresponse && !inloop) {
+			oldresponse = http.responseText;
+			var tmp = JSON.parse(http.responseText);
 			if (first) {
-				window.scrollTo(0,document.body.scrollHeight);
 				first = false;
+				inloop = true;
+				document.getElementById("chatstuffs").innerHTML = document.getElementById("chatstuffs").innerHTML.concat("<br/>");
+				getchatsloop(tmp, 0);
+			} else {
+				toBox(tmp[Object.keys(tmp).length-1],Object.keys(tmp).length-1);
+				window.scrollTo(0,document.body.scrollHeight);
 			}
 		}
+		setTimeout(function(){getchats(id, sess);}, 500);
 	}
 }
 
@@ -78,10 +89,8 @@ var sendtext = function(sess,username,id) {
 	text = tmp.join("\n");
 	if (text != "" && text != undefined) {
 		var chathttp2 = new XMLHttpRequest();
-		chathttp2.open("POST", "https://messenger.stibarc.gq/api/postchat.sjs", false);
+		chathttp2.open("POST", "https://messenger.stibarc.gq/api/postchat.sjs", true);
 		chathttp2.send("sess="+sess+"&other="+username+"&id="+id+"&message="+encodeURIComponent(text));
-		getchats(id, sess);
-		window.scrollTo(0,document.body.scrollHeight);
 	}
 }
 
@@ -90,7 +99,7 @@ window.onload = function() {
 	var id = getAllUrlParams().id;
 	var sess = window.localStorage.getItem("sess");
 	var chathttp = new XMLHttpRequest();
-	chathttp.open("POST", "https://messenger.stibarc.gq/api/getuserchats.sjs", true);
+	chathttp.open("POST", "https://messenger.stibarc.gq/api/v2/getuserchats.sjs", true);
 	chathttp.send("sess="+sess);
 	chathttp.onload = function(e) {
 		var tmp = JSON.parse(chathttp.responseText);
@@ -113,7 +122,7 @@ window.onload = function() {
 				shifted = false;
 			}
 		});
-		setInterval(function(){getchats(id, sess);}, 500);
+		getchats(id, sess);
 		startNotifs();
 	}
 }
