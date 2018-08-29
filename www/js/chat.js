@@ -36,16 +36,42 @@ function getAllUrlParams(url) {
 }
 
 var toBox = function(oof,i) {
-	var div = document.createElement('div');
-	div.className = 'chatbox'
-	div.setAttribute("name", i+1);
-	div.innerHTML = '<a href="https://stibarc.gq/user.html?id='+oof['sender']+'">'+oof['sender']+'</a><br/>'+oof['message'];
-	document.getElementById("chatstuffs").appendChild(div);
-	document.getElementById("chatstuffs").innerHTML = document.getElementById("chatstuffs").innerHTML.concat("<br/>");
+	try {
+		var div = document.createElement('div');
+		div.className = 'chatbox'
+		div.setAttribute("name", i);
+		div.innerHTML = '<a href="https://stibarc.gq/user.html?id='+oof['sender']+'">'+oof['sender']+'</a><br/>'+oof['message'];
+		document.getElementById("chatstuffs").appendChild(div);
+		document.getElementById("chatstuffs").innerHTML = document.getElementById("chatstuffs").innerHTML.concat("<br/>");
+	} catch(err) {console.log(err);}
 }
 
 var oldresponse = "";
 var inloop = false;
+var firsti = 0;
+
+var loadmoreloop = function(tmp, i) {
+	toBoxMore(tmp[i-1], i-1);
+	var tmp2 = firsti-20;
+	if (tmp2 < 0) {tmp2=0;}
+	if (tmp[i-1] != undefined && i >= tmp2) {
+		try{document.getElementsByName(firsti)[0].scrollIntoView();}catch(err){}
+		setTimeout(function() {loadmoreloop(tmp, i-1)},1);
+	} else {
+		firsti = i-1;
+		inloop = false;
+	}
+}
+
+var toBoxMore = function(oof, i) {
+	try {
+		var div = document.createElement('div');
+		div.className = 'chatbox'
+		div.setAttribute("name", i);
+		div.innerHTML = '<a href="https://stibarc.gq/user.html?id='+oof['sender']+'">'+oof['sender']+'</a><br/>'+oof['message'];
+		document.getElementById("chatstuffs").innerHTML = '<br/><div class="chatbox" name="'+(i)+'">'+'<a href="https://stibarc.gq/user.html?id='+oof['sender']+'">'+oof['sender']+'</a><br/>'+oof['message']+'</div>'+document.getElementById("chatstuffs").innerHTML;
+	} catch(err) {console.log(err);}
+}
 
 var getchatsloop = function(tmp, i) {
 	toBox(tmp[i],i);
@@ -63,17 +89,22 @@ var getchats = function(id, sess) {
 	http.send("id="+id+"&sess="+sess);
 	http.onload = function(e) {
 		if (http.responseText != oldresponse && !inloop) {
-			oldresponse = http.responseText;
-			var tmp = JSON.parse(http.responseText);
-			if (first) {
-				first = false;
-				inloop = true;
-				document.getElementById("chatstuffs").innerHTML = document.getElementById("chatstuffs").innerHTML.concat("<br/>");
-				getchatsloop(tmp, 0);
-			} else {
-				toBox(tmp[Object.keys(tmp).length-1],Object.keys(tmp).length-1);
-				window.scrollTo(0,document.body.scrollHeight);
-			}
+			try {
+				var tmp = JSON.parse(http.responseText);
+				oldresponse = http.responseText;
+				if (first) {
+					first = false;
+					inloop = true;
+					document.getElementById("chatstuffs").innerHTML = document.getElementById("chatstuffs").innerHTML.concat("<br/>");
+					var tmpi = Object.keys(tmp).length-20;
+					if (tmpi < 0) {tmpi = 0;}
+					firsti = tmpi;
+					getchatsloop(tmp, tmpi);
+				} else {
+					toBox(tmp[Object.keys(tmp).length-1],Object.keys(tmp).length-1);
+					window.scrollTo(0,document.body.scrollHeight);
+				}
+			} catch(err) {console.log(err);}
 		}
 		setTimeout(function(){getchats(id, sess);}, 500);
 	}
@@ -125,4 +156,16 @@ window.onload = function() {
 		getchats(id, sess);
 		startNotifs();
 	}
+}
+
+window.onscroll = function(e) {
+	try {
+		if (window.pageYOffset == 0 && !inloop) {
+			if (firsti > 0) {
+				inloop = true;
+				var tmp = JSON.parse(oldresponse);
+				loadmoreloop(tmp, firsti);
+			}
+		}
+	} catch(err) {console.log(err);}
 }
