@@ -58,13 +58,30 @@ var getchats = function(id, sess) {
 			document.getElementById("chatstuffs").innerHTML = "<br/>";
 			tmp.shift();
 			for (var i = 0; i < tmp.length-1; i++) {
-				toBox(tmp[i].replace(/<script/g, "&lt;script").replace(/<meta/g, "&lt;meta").replace(/<\/script/g, "&lt;/script"),i);
+				toBox(tmp[i],i);
+			}
+			if (first) {
+				window.scrollTo(0,document.body.scrollHeight);
+				first = false;
 			}
 		}
-		if (first) {
-			window.scrollTo(0,document.body.scrollHeight);
-			first = false;
-		}
+	}
+}
+
+var sendtext = function(sess,username,id) {
+	var text = document.getElementById("input").value;
+	document.getElementById("input").value = "";
+	var tmp = text.split("\n");
+	if (tmp[tmp.length-1] == "") {
+		tmp.pop();
+	}
+	text = tmp.join("\n");
+	if (text != "" && text != undefined) {
+		var chathttp2 = new XMLHttpRequest();
+		chathttp2.open("POST", "https://messenger.stibarc.gq/api/postchat.sjs", false);
+		chathttp2.send("sess="+sess+"&other="+username+"&id="+id+"&message="+encodeURIComponent(text));
+		getchats(id, sess);
+		window.scrollTo(0,document.body.scrollHeight);
 	}
 }
 
@@ -73,22 +90,30 @@ window.onload = function() {
 	var id = getAllUrlParams().id;
 	var sess = window.localStorage.getItem("sess");
 	var chathttp = new XMLHttpRequest();
-	chathttp.open("POST", "https://messenger.stibarc.gq/api/getuserchats.sjs", false);
+	chathttp.open("POST", "https://messenger.stibarc.gq/api/getuserchats.sjs", true);
 	chathttp.send("sess="+sess);
-	var tmp = JSON.parse(chathttp.responseText);
-	var username = tmp[id]['user'];
-	document.getElementById("user").innerHTML = "<b>"+username+"</b>";
-	setInterval(function(){getchats(id, sess);}, 500);
-	startNotifs();
-	document.getElementById("send").onclick = function(e) {
-		var text = document.getElementById("input").value;
-		document.getElementById("input").value = "";
-		if (text != "" && text != undefined) {
-			var chathttp2 = new XMLHttpRequest();
-			chathttp2.open("POST", "https://messenger.stibarc.gq/api/postchat.sjs", false);
-			chathttp2.send("sess="+sess+"&other="+username+"&id="+id+"&message="+encodeURIComponent(text.replace(/\n/g, "<br/>")));
-			getchats(id, sess);
-			window.scrollTo(0,document.body.scrollHeight);
+	chathttp.onload = function(e) {
+		var tmp = JSON.parse(chathttp.responseText);
+		var username = tmp[id]['user'];
+		document.getElementById("user").innerHTML = "<b>"+username+"</b>";
+		document.getElementById("send").onclick = function(e) {
+			sendtext(sess,username,id);
 		}
+		var shifted = false;
+		document.getElementById("input").addEventListener("keydown", function(e) {
+			if (e.keyCode == 16) {
+				shifted = true;
+			}
+		});
+		document.getElementById("input").addEventListener("keyup", function(e) {
+			if (e.keyCode == 13 && shifted == false) {
+				sendtext(sess,username,id);
+			}
+			if (e.keyCode == 16) {
+				shifted = false;
+			}
+		});
+		setInterval(function(){getchats(id, sess);}, 500);
+		startNotifs();
 	}
 }
